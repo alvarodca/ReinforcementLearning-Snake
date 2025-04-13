@@ -24,6 +24,7 @@ class SnakeGameEnv:
         self.direction = 'RIGHT'
         self.score = 0
         self.game_over = False
+        self.reward = 0 # Initialize the starting reward
         return self.get_state()
 
     def step(self, action):
@@ -40,11 +41,45 @@ class SnakeGameEnv:
         return state, reward, self.game_over
 
     def get_state(self):
-        # Your code here
-        # Here, you will calculate the state based on your actual state calculation logic
+        """Obtaining the current state of the game. Our snake currently has 12 different states. These are the combination
+        of the direction to the food along with the closest direction"""
+        # Calculating the  distance to the food
+        distance_to_food_x = self.food_pos[0] - self.snake_body[0][0]
+        distance_to_food_y = self.food_pos[1] - self.snake_body[0][1]
 
-        # state = whatever
-        # return state
+        # Calculating the direction with respect to the food
+        if abs(distance_to_food_x) < abs(distance_to_food_y):
+            if distance_to_food_y > 0:
+                direction = "UP"
+            else:
+                direction = "DOWN"
+
+        else:
+            if distance_to_food_x > 0:
+                direction = "RIGHT"
+            else:
+                direction = "LEFT"
+
+        # Calculating the distance
+        distance = abs(distance_to_food_x) + abs(distance_to_food_y)
+
+        # Total size of the board
+        board_size = self.frame_size_x + self.frame_size_y
+
+        # Normalizing the distance
+        normalized_distance = distance/board_size
+
+        # Returning nominal values in terms of the distance
+        if normalized_distance <= 0.33:
+            rel_distance = "Close"
+        elif normalized_distance >= 0.66:
+            rel_distance = "Far"
+        else:
+            rel_distance = "Medium"
+
+        return (direction, rel_distance)
+
+
         
     def get_body(self):
     	return self.snake_body
@@ -53,10 +88,19 @@ class SnakeGameEnv:
     	return self.food_pos
 
     def calculate_reward(self):
-        # Your code here
-        # Calculate and return the reward. Remember that you can provide possitive or negative reward.
-        # reward = whatever
-        # return reward
+        """Calculates the reward of the snake"""
+
+        # Positive Reward if the apple is eaten
+        if self.snake_pos[0] == self.food_pos[0] and self.snake_pos[1] == self.food_pos[1]:
+            self.reward += 100
+        else:
+            self.reward -= 1 # Negative reward if the apple is not eaten
+
+        # Make sure the snake has not died yet
+        if self.check_game_over:
+            self.reward -= 100
+
+        return self.reward
         
     def check_game_over(self):
         # Return True if the game is over, else False
