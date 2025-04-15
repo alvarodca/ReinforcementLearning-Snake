@@ -36,6 +36,19 @@ class QLearning:
         # Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + 0)
         # else:
         # Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + self.discount * max a' Q(nextState, a'))
+        position = self.computePosition(state)
+        action_column = self.actions[action]
+
+        # Terminal state
+        if len(self.getLegalActions(next_state)) == 0:
+            self.q_table[position][action_column] = (1 - self.alpha) * self.getQValue(state, action) + \
+                                                    self.alpha * (reward + 0)
+
+        # Non-terminal state
+        else: 
+            self.q_table[position][action_column] = (1 - self.alpha) * self.getQValue(state, action) + \
+                                                    self.alpha * (reward + self.discount * self.getValue(next_state))
+
 
     def save_q_table(self, filename="q_table.txt"):
         np.savetxt(filename, self.q_table)

@@ -40,15 +40,15 @@ class SnakeGameEnv:
         self.game_over = self.check_game_over()
         return state, reward, self.game_over
 
-    def get_state(self):
-        """Obtaining the current state of the game. Our snake currently has 12 different states. These are the combination
-        of the direction to the food along with the closest direction"""
+    def direction_to_food(self):
+        """Obtains the direction from the head of the snake to the food"""
+
         # Calculating the  distance to the food
         distance_to_food_x = self.food_pos[0] - self.snake_body[0][0]
         distance_to_food_y = self.food_pos[1] - self.snake_body[0][1]
 
         # Calculating the direction with respect to the food
-        if abs(distance_to_food_x) < abs(distance_to_food_y):
+        if abs(distance_to_food_x) < abs(distance_to_food_y): # Vertical difference is higher
             if distance_to_food_y > 0:
                 direction = "UP"
             else:
@@ -60,6 +60,15 @@ class SnakeGameEnv:
             else:
                 direction = "LEFT"
 
+        return direction
+    
+    def distance_to_food(self):
+        """Obtains the relative distance from the head of the snake to the food, discretizing it in terms of closeness"""
+        
+        # Calculating the  distance to the food
+        distance_to_food_x = self.food_pos[0] - self.snake_body[0][0]
+        distance_to_food_y = self.food_pos[1] - self.snake_body[0][1]
+        
         # Calculating the distance
         distance = abs(distance_to_food_x) + abs(distance_to_food_y)
 
@@ -77,13 +86,41 @@ class SnakeGameEnv:
         else:
             rel_distance = "Medium"
 
+        return rel_distance
+
+    def get_state(self):
+        """Obtaining the current state of the game. Our snake currently has 12 different states. These are the combination
+        of the direction to the food along with the closest direction"""
+        
+        # Obtaining the direction
+        direction = self.direction_to_food()
+
+        # Obtaining the distance {Close, Medium, Far}
+        rel_distance = self.distance_to_food()
+
         return (direction, rel_distance)
 
-
+    def encode_state(self, state):
+        """Encode state to obtain an integer"""
         
+        direction_map = {
+            "UP": 0,
+            "DOWN": 1,
+            "LEFT": 2,
+            "RIGHT": 3
+        }
+        distance_map = {
+            "Close": 0,
+            "Medium": 1,
+            "Far": 2
+        }
+
+        direction, distance = state
+        return direction_map[direction] * 3 + distance_map[distance]
+
     def get_body(self):
     	return self.snake_body
-
+    
     def get_food(self):
     	return self.food_pos
 

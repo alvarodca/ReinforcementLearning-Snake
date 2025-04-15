@@ -26,19 +26,26 @@ def main():
     growing_body = False # Makes the body of the snake grow
     training = False # Defines if it should train or not
 
+    # Defining our states and actions
+    number_states = 12
+    number_actions = 4
+    num_episodes = 5 # Episode we want for training, everytime an apple is eaten an episode is finished
+
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
-    # You must define the number of possible states.
-    # number_states = whatever
     pygame.init()
     env = SnakeGameEnv(FRAME_SIZE_X, FRAME_SIZE_Y, growing_body)
-    ql = QLearning(n_states=number_states, n_actions=4)  
-    # num_episodes = the number of episodes you want for training.
+    ql = QLearning(n_states=number_states, n_actions=number_actions)  
+    
 
 
     if render_game:
         game_window = pygame.display.set_mode((FRAME_SIZE_X, FRAME_SIZE_Y))
         fps_controller = pygame.time.Clock()
+    
+    # Loading the table
+    ql.load_q_table(filename="q_table.txt")
+        
     
     for episode in range(num_episodes):
         state = env.reset()
@@ -49,10 +56,24 @@ def main():
             # Your code here.
             # Choose the best action for the state and possible actions from the q_learning algorithm
             # Call the environment step with that action and get next_state, reward and game_over variables
+
+
+
+            # Obtaining the current state and encoding it
+            state = env.get_state()
+            enc_state = env.encode_state(state)
+
+            # Obtaining the directions and action taken
+            directions = ["UP","DOWN","RIGHT","LEFT"]
+            action = ql.choose_action(enc_state, directions)
+            nextState, reward, game_over = env.step(action)
+            
             if training:
                 #update the q table using those variables.
-                
+                ql.update_q_table(state,action,reward,nextState)
+
             # Update the state and the total_reward.
+            total_reward += reward
             
             # Render
             if render_game:
