@@ -27,7 +27,7 @@ def main():
     training = True # Defines if it should train or not
 
     # Defining our states and actions
-    number_states = 12
+    number_states = 4
     number_actions = 4
     num_episodes = 100 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
@@ -71,7 +71,8 @@ def main():
             print("action",action)
             nextState, reward, game_over = env.step(action)
             print("nextState",nextState)
-            print("reward",reward)
+            print(f"reward {reward}\n\n")
+
 
             if training:
                 #update the q table using those variables.

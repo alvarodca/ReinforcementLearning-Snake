@@ -10,7 +10,7 @@ import json
 import time
 
 class QLearning:
-    def __init__(self, n_states, n_actions, alpha=0.1, gamma=0.9, epsilon=0.01, epsilon_min=0.01, epsilon_decay=0.999999):
+    def __init__(self, n_states, n_actions, alpha=0.5, gamma=0.1, epsilon=0.15, epsilon_min=0.01, epsilon_decay=0.999999):
         self.n_states = n_states
         self.n_actions = n_actions
         self.alpha = alpha
@@ -37,7 +37,7 @@ class QLearning:
         """Encode state to obtain an integer"""
         
         # Directions
-        direction_map = {
+        """direction_map = {
             "UP": 0,
             "DOWN": 1,
             "LEFT": 2,
@@ -49,11 +49,21 @@ class QLearning:
             "Close": 0,
             "Medium": 1,
             "Far": 2
+        }"""
+        direction_y = {
+            "UP": 0,
+            "DOWN": 1
         }
+
+        direction_x = {
+            "LEFT": 0,
+            "RIGHT": 1
+        }
+
         # Obtaining information about the state
-        direction, distance = state
+        hor, ver = state
         # Returning the mapped values
-        return direction_map[direction] * 3 + distance_map[distance]
+        return direction_y[ver]*2 + direction_x[hor]
 
     def update_q_table(self, state, action, reward, next_state):
         # Your code here
@@ -75,6 +85,9 @@ class QLearning:
         # Non-terminal state
         else:
             new_q = (1-self.alpha)*current_q + self.alpha*(reward+self.gamma*np.max(self.q_table[enc_next_state]))
+
+        # Write back updated Q-value into the q_table
+        self.q_table[enc_state][action] = new_q
 
 
 

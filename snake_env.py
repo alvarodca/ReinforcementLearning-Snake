@@ -33,8 +33,12 @@ class SnakeGameEnv:
         # Check for collision with food, walls, or self
         # Update the score and reset food as necessary
         # Determine if the game is over
+
+        previous_distance = abs(self.food_pos[0] - self.snake_body[0][0]) + \
+                            abs(self.food_pos[1] - self.snake_body[0][1])
+        
         self.update_snake_position(action)
-        reward = self.calculate_reward()
+        reward = self.calculate_reward(previous_distance)
         self.update_food_position()
         state = self.get_state()
         self.game_over = self.check_game_over()
@@ -92,13 +96,26 @@ class SnakeGameEnv:
         """Obtaining the current state of the game. Our snake currently has 12 different states. These are the combination
         of the direction to the food along with the closest direction"""
         
-        # Obtaining the direction
+        """# Obtaining the direction
         direction = self.direction_to_food()
 
         # Obtaining the distance {Close, Medium, Far}
         rel_distance = self.distance_to_food()
 
-        return (direction, rel_distance)
+        return (direction, rel_distance)"""
+
+        if self.food_pos[0] < self.snake_body[0][0]:
+            hor = "LEFT"
+        else:
+            hor = "RIGHT"
+    
+        # Determine vertical value based on snake head and food positions
+        if self.food_pos[1] < self.snake_body[0][1]:
+            ver = "UP"
+        else:
+            ver = "DOWN"
+    
+        return (hor, ver)
 
 
     def get_body(self):
@@ -106,17 +123,51 @@ class SnakeGameEnv:
     
     def get_food(self):
     	return self.food_pos
+    
+    def distance_to_border(self):
+        """Calculates the distance from the snake's head to the closest border (in pixels)."""
+        # Distance from left border
+        d_left = self.snake_pos[0]
+        # Distance from right border (considering a cell size of 10)
+        d_right = self.frame_size_x - self.snake_pos[0] - 10
+        # Distance from top border
+        d_top = self.snake_pos[1]
+        # Distance from bottom border
+        d_bottom = self.frame_size_y - self.snake_pos[1] - 10
+        return min(d_left, d_right, d_top, d_bottom)
 
-    def calculate_reward(self):
+    def calculate_reward(self, previous_distance):
         """Calculates the reward of the snake"""
-        # If an apple is eaten
+        """# If an apple is eaten
         if self.snake_pos == self.food_pos:
             return 100      
         # If the game finishes
         elif self.check_game_over():
             return -100
         else:
-            return -1
+            return -1"""
+        
+        # Calculate the current Manhattan distance to food
+        current_distance = abs(self.food_pos[0] - self.snake_body[0][0]) + \
+                        abs(self.food_pos[1] - self.snake_body[0][1])
+        
+        # Reward for eating food or game over conditions
+        if self.snake_pos == self.food_pos:
+            return 100      
+        elif self.check_game_over():
+            return -100
+        
+        # Delta reward: positive if the agent is getting closer; negative otherwise
+        progress_reward = previous_distance - current_distance
+
+        max_distance = 1000 
+        normalized_distance = current_distance / max_distance
+        
+        # Optionally, incorporate border distance if you want to penalize near-border behavior:
+        #border_penalty = self.distance_to_border()  
+    
+        # Combine these components; the coefficients may need tuning:
+        return 0.1 * progress_reward - 5.0 * normalized_distance
 
     def check_game_over(self):
         # Return True if the game is over, else False
