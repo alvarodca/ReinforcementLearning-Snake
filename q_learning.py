@@ -23,11 +23,37 @@ class QLearning:
     def choose_action(self, state, allowed_actions):
         if np.random.uniform(0, 1) < self.epsilon:
             action = random.choice(allowed_actions)  # Explore
+            #print("Explore", action)
         else:
+            #print("state action", state)
             action = np.argmax(self.q_table[state])  # Exploit
+            print("Exploit", action)
+            #print(self.q_table[state])
             
         self.epsilon = max(self.epsilon_min, self.epsilon_decay * self.epsilon)
         return action
+    
+    def encode_state(self, state):
+        """Encode state to obtain an integer"""
+        
+        # Directions
+        direction_map = {
+            "UP": 0,
+            "DOWN": 1,
+            "LEFT": 2,
+            "RIGHT": 3
+        }
+
+        # Distances
+        distance_map = {
+            "Close": 0,
+            "Medium": 1,
+            "Far": 2
+        }
+        # Obtaining information about the state
+        direction, distance = state
+        # Returning the mapped values
+        return direction_map[direction] * 3 + distance_map[distance]
 
     def update_q_table(self, state, action, reward, next_state):
         # Your code here
@@ -36,18 +62,20 @@ class QLearning:
         # Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + 0)
         # else:
         # Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + self.discount * max a' Q(nextState, a'))
-        position = self.computePosition(state)
-        action_column = self.actions[action]
+        enc_state = self.encode_state(state)
+        enc_next_state = self.encode_state(next_state)
 
-        # Terminal state
-        if len(self.getLegalActions(next_state)) == 0:
-            self.q_table[position][action_column] = (1 - self.alpha) * self.getQValue(state, action) + \
-                                                    self.alpha * (reward + 0)
+        # Our Q value
+        current_q = self.q_table[enc_state][action]
+
+        # Terminal state if apple is eaten or snake dies
+        if reward == 100 or reward == -100:
+            new_q = (1-self.alpha)*current_q + self.alpha*reward
 
         # Non-terminal state
-        else: 
-            self.q_table[position][action_column] = (1 - self.alpha) * self.getQValue(state, action) + \
-                                                    self.alpha * (reward + self.discount * self.getValue(next_state))
+        else:
+            new_q = (1-self.alpha)*current_q + self.alpha*(reward+self.gamma*np.max(self.q_table[enc_next_state]))
+
 
 
     def save_q_table(self, filename="q_table.txt"):

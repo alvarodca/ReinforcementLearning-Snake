@@ -100,23 +100,6 @@ class SnakeGameEnv:
 
         return (direction, rel_distance)
 
-    def encode_state(self, state):
-        """Encode state to obtain an integer"""
-        
-        direction_map = {
-            "UP": 0,
-            "DOWN": 1,
-            "LEFT": 2,
-            "RIGHT": 3
-        }
-        distance_map = {
-            "Close": 0,
-            "Medium": 1,
-            "Far": 2
-        }
-
-        direction, distance = state
-        return direction_map[direction] * 3 + distance_map[distance]
 
     def get_body(self):
     	return self.snake_body
@@ -126,19 +109,15 @@ class SnakeGameEnv:
 
     def calculate_reward(self):
         """Calculates the reward of the snake"""
-
-        # Positive Reward if the apple is eaten
-        if self.snake_pos[0] == self.food_pos[0] and self.snake_pos[1] == self.food_pos[1]:
-            self.reward += 100
+        # If an apple is eaten
+        if self.snake_pos == self.food_pos:
+            return 100      
+        # If the game finishes
+        elif self.check_game_over():
+            return -100
         else:
-            self.reward -= 1 # Negative reward if the apple is not eaten
+            return -1
 
-        # Make sure the snake has not died yet
-        if self.check_game_over:
-            self.reward -= 100
-
-        return self.reward
-        
     def check_game_over(self):
         # Return True if the game is over, else False
         if self.snake_pos[0] < 0 or self.snake_pos[0] > self.frame_size_x-10:

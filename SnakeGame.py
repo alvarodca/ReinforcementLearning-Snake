@@ -24,12 +24,12 @@ def main():
     difficulty = 5  # Adjust as needed
     render_game = True # Show the game or not
     growing_body = False # Makes the body of the snake grow
-    training = False # Defines if it should train or not
+    training = True # Defines if it should train or not
 
     # Defining our states and actions
     number_states = 12
     number_actions = 4
-    num_episodes = 5 # Episode we want for training, everytime an apple is eaten an episode is finished
+    num_episodes = 100 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
@@ -61,19 +61,25 @@ def main():
 
             # Obtaining the current state and encoding it
             state = env.get_state()
-            enc_state = env.encode_state(state)
+            print("state",state)
+            enc_state = ql.encode_state(state)
+            print("enc_state",enc_state)
 
             # Obtaining the directions and action taken
-            directions = ["UP","DOWN","RIGHT","LEFT"]
+            directions = [0,1,2,3]
             action = ql.choose_action(enc_state, directions)
+            print("action",action)
             nextState, reward, game_over = env.step(action)
-            
+            print("nextState",nextState)
+            print("reward",reward)
+
             if training:
                 #update the q table using those variables.
                 ql.update_q_table(state,action,reward,nextState)
 
             # Update the state and the total_reward.
-            total_reward += reward
+            state = nextState # Updating state
+            total_reward += reward # Updating reward
             
             # Render
             if render_game:
