@@ -103,19 +103,20 @@ class SnakeGameEnv:
         rel_distance = self.distance_to_food()
 
         return (direction, rel_distance)"""
+       
+        head_x, head_y = self.snake_body[0]
+        food_x, food_y = self.food_pos
 
-        if self.food_pos[0] < self.snake_body[0][0]:
-            hor = "LEFT"
+        if food_x == head_x:
+            # Aligned vertically
+            return "UP" if food_y < head_y else "DOWN"
+        elif food_y == head_y:
+            # Aligned horizontally
+            return "LEFT" if food_x < head_x else "RIGHT"
         else:
-            hor = "RIGHT"
-    
-        # Determine vertical value based on snake head and food positions
-        if self.food_pos[1] < self.snake_body[0][1]:
-            ver = "UP"
-        else:
-            ver = "DOWN"
-    
-        return (hor, ver)
+            hor = "LEFT" if food_x < head_x else "RIGHT"
+            ver = "UP" if food_y < head_y else "DOWN"
+            return (hor, ver)
 
 
     def get_body(self):
@@ -138,15 +139,7 @@ class SnakeGameEnv:
 
     def calculate_reward(self, previous_distance):
         """Calculates the reward of the snake"""
-        """# If an apple is eaten
-        if self.snake_pos == self.food_pos:
-            return 100      
-        # If the game finishes
-        elif self.check_game_over():
-            return -100
-        else:
-            return -1"""
-        
+
         # Calculate the current Manhattan distance to food
         current_distance = abs(self.food_pos[0] - self.snake_body[0][0]) + \
                         abs(self.food_pos[1] - self.snake_body[0][1])
@@ -155,19 +148,13 @@ class SnakeGameEnv:
         if self.snake_pos == self.food_pos:
             return 100      
         elif self.check_game_over():
-            return -100
+            return -10
         
-        # Delta reward: positive if the agent is getting closer; negative otherwise
-        progress_reward = previous_distance - current_distance
-
-        max_distance = 1000 
-        normalized_distance = current_distance / max_distance
-        
-        # Optionally, incorporate border distance if you want to penalize near-border behavior:
-        #border_penalty = self.distance_to_border()  
+        if previous_distance - current_distance > 0:
+            return 15
+        else: 
+            return -5
     
-        # Combine these components; the coefficients may need tuning:
-        return 0.1 * progress_reward - 5.0 * normalized_distance
 
     def check_game_over(self):
         # Return True if the game is over, else False

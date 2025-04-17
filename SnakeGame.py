@@ -21,15 +21,15 @@ def main():
     GREEN = pygame.Color(0, 255, 0)
     BLUE = pygame.Color(0, 0, 255)
     
-    difficulty = 5  # Adjust as needed
+    difficulty = 150  # Adjust as needed
     render_game = True # Show the game or not
     growing_body = False # Makes the body of the snake grow
     training = True # Defines if it should train or not
 
     # Defining our states and actions
-    number_states = 4
+    number_states = 8
     number_actions = 4
-    num_episodes = 100 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
+    num_episodes =500 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.

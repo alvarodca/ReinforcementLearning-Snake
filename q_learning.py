@@ -10,7 +10,7 @@ import json
 import time
 
 class QLearning:
-    def __init__(self, n_states, n_actions, alpha=0.5, gamma=0.1, epsilon=0.15, epsilon_min=0.01, epsilon_decay=0.999999):
+    def __init__(self, n_states, n_actions, alpha=0.3, gamma=0.05, epsilon=0.2, epsilon_min=0.01, epsilon_decay=0.999):
         self.n_states = n_states
         self.n_actions = n_actions
         self.alpha = alpha
@@ -36,34 +36,16 @@ class QLearning:
     def encode_state(self, state):
         """Encode state to obtain an integer"""
         
-        # Directions
-        """direction_map = {
-            "UP": 0,
-            "DOWN": 1,
-            "LEFT": 2,
-            "RIGHT": 3
-        }
-
-        # Distances
-        distance_map = {
-            "Close": 0,
-            "Medium": 1,
-            "Far": 2
-        }"""
-        direction_y = {
-            "UP": 0,
-            "DOWN": 1
-        }
-
-        direction_x = {
-            "LEFT": 0,
-            "RIGHT": 1
-        }
-
-        # Obtaining information about the state
-        hor, ver = state
-        # Returning the mapped values
-        return direction_y[ver]*2 + direction_x[hor]
+        simple_map = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3}
+        if isinstance(state, str):
+            return simple_map[state]
+        else:
+            direction_y = {"UP": 0, "DOWN": 1}
+            direction_x = {"LEFT": 0, "RIGHT": 1}
+            # Unpack the tuple. (hor, ver) in our case.
+            hor, ver = state
+            # Offset combined states by 4
+            return 4 + direction_y[ver] * 2 + direction_x[hor]
 
     def update_q_table(self, state, action, reward, next_state):
         # Your code here
