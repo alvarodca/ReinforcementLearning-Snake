@@ -10,7 +10,9 @@ import json
 import time
 
 class QLearning:
-    def __init__(self, n_states, n_actions, alpha=0.7, gamma=0.3, epsilon=0.9, epsilon_min=0.01, epsilon_decay=0.999):
+    def __init__(self, n_states, n_actions, alpha=0, gamma=0.9, epsilon=0, epsilon_min=0.01, epsilon_decay=0.999):
+        # Best values after hyperparameter tuning seem to be alpha = 0.2 and gamma = 0.9
+        # With alpha and epsilon = 0 we can see how well training is being done
         self.n_states = n_states
         self.n_actions = n_actions
         self.alpha = alpha
@@ -33,7 +35,7 @@ class QLearning:
         self.epsilon = max(self.epsilon_min, self.epsilon_decay * self.epsilon)
         return action
     
-    def save_hyperparams(self, episode_number, total_reward, filename = "hyperparams_alpha07_gamma03.txt"):
+    def save_hyperparams(self, episode_number, total_reward, filename = "hyperparams.txt"):
         """Stores hyperparameters after each run"""
         with open(filename, "a") as f:
             f.write(f"{episode_number}\t{self.alpha}\t{self.gamma}\t{self.epsilon}\t{total_reward}\n")

@@ -1,4 +1,4 @@
-Episode Alpha Epsilon Gamma TotalReward
+Episode Alpha Gamma Epsilon TotalReward
 1	0.7	0.3	0.8991	-10
 2	0.7	0.3	0.8910403921887733	-10
 3	0.7	0.3	0.8901493517965845	-10

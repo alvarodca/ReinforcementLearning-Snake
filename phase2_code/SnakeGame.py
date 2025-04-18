@@ -11,8 +11,8 @@ import sys
 
 def main():
     # Window size
-    FRAME_SIZE_X = 150
-    FRAME_SIZE_Y = 150
+    FRAME_SIZE_X = 300
+    FRAME_SIZE_Y = 300
     
     # Colors (R, G, B)
     BLACK = pygame.Color(0, 0, 0)
@@ -29,7 +29,7 @@ def main():
     # Defining our states and actions
     number_states = 8
     number_actions = 4
-    num_episodes = 1000 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
+    num_episodes = 100 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
@@ -100,8 +100,10 @@ def main():
                 pygame.display.flip()
                 fps_controller.tick(difficulty)
         
+        # Saving our table
         ql.save_q_table()
-        ql.save_hyperparams(episode+1,total_reward)
+        # Saving out hyperparameters
+        #ql.save_hyperparams(episode+1,total_reward)
         print(f"Episode {episode+1}, Total reward: {total_reward}")
 
 if __name__ == "__main__":
