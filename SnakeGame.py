@@ -8,6 +8,7 @@ from snake_env import SnakeGameEnv
 from q_learning import QLearning
 import pygame
 import sys
+import numpy as np
 
 def main():
     # Window size
@@ -21,15 +22,15 @@ def main():
     GREEN = pygame.Color(0, 255, 0)
     BLUE = pygame.Color(0, 0, 255)
     
-    difficulty = 10  # Adjust as needed
+    difficulty = 500  # Adjust as needed
     render_game = True # Show the game or not
     growing_body = True # Makes the body of the snake grow
     training = True # Defines if it should train or not
 
     # Defining our states and actions
-    number_states = 8
+    number_states = 28
     number_actions = 4
-    num_episodes = 5000 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
+    num_episodes = 500 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
@@ -60,6 +61,7 @@ def main():
 
 
             # Obtaining the current state and encoding it
+            print(f"--------EPISODE {episode+1}--------")
             state = env.get_state()
             print("state",state)
             enc_state = ql.encode_state(state)
@@ -106,5 +108,48 @@ def main():
         #ql.save_hyperparams(episode+1,total_reward)
         print(f"Episode {episode+1}, Total reward: {total_reward}")
 
+
+
+
+    # Final testing phase (speed set to 20 regardless of training speed)
+    print("-----Training complete. Now testing final agent-----")
+    ql.epsilon = 0   # Disable exploration; use a greedy policy
+    test_difficulty = 20
+    test_episodes = 5
+
+    for test in range(test_episodes):
+        state = env.reset()
+        total_reward = 0
+        game_over = False
+        print(f"--------TEST EPISODE {test+1}--------")
+        while not game_over:
+            enc_state = ql.encode_state(state)
+            # Greedy action selection (no exploration)
+            action = np.argmax(ql.q_table[enc_state])
+            state, reward, game_over = env.step(action)
+            total_reward += reward
+            
+            # Render test episode using the test speed (20)
+            if render_game:
+                game_window.fill(BLACK)
+                snake_body = env.get_body()
+                food_pos = env.get_food()
+                for pos in snake_body:
+                    pygame.draw.rect(game_window, GREEN, pygame.Rect(pos[0], pos[1], 10, 10))
+                pygame.draw.rect(game_window, RED, pygame.Rect(food_pos[0], food_pos[1], 10, 10))
+                
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                
+                pygame.display.flip()
+                fps_controller.tick(test_difficulty)
+        print(f"\nTest Episode {test+1}, Total reward: {total_reward}")
+
+
+
 if __name__ == "__main__":
     main()
+
+    

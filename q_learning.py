@@ -10,7 +10,7 @@ import json
 import time
 
 class QLearning:
-    def __init__(self, n_states, n_actions, alpha=0.2, gamma=0.9, epsilon=1, epsilon_min=0.01, epsilon_decay=0.999):
+    def __init__(self, n_states, n_actions, alpha=0.2, gamma=0.05, epsilon=1, epsilon_min=0.01, epsilon_decay=0.99):
         # Best values after hyperparameter tuning seem to be alpha = 0.2 and gamma = 0.9
         # To see if training is being done right, epsilon = 0
         self.n_states = n_states
@@ -44,7 +44,7 @@ class QLearning:
     def encode_state(self, state):
         """Encode state to obtain an integer"""
         
-        simple_map = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3}
+        """simple_map = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3}
         if isinstance(state, str):
             return simple_map[state]
         else:
@@ -54,7 +54,65 @@ class QLearning:
             hor, ver = state
             # Offset combined states by 4
             return 4 + direction_y[ver] * 2 + direction_x[hor]
+"""
+    
 
+        border, food_state = state
+
+        # For border "none" use full mapping (8 outcomes):
+        if border == "none":
+            simple_map = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3}
+            if isinstance(food_state, str):
+                row = simple_map[food_state]
+            else:
+                direction_y = {"UP": 0, "DOWN": 1}
+                direction_x = {"LEFT": 0, "RIGHT": 1}
+                hor, ver = food_state
+                row = 4 + (direction_y[ver] * 2 + direction_x[hor])
+
+        elif border == "top":
+            simple_map = {"DOWN": 0, "LEFT": 1, "RIGHT": 2}
+            if isinstance(food_state, str):
+                row = 8 + simple_map[food_state]
+            else:
+                direction_y = {"DOWN": 0}
+                direction_x = {"LEFT": 0, "RIGHT": 1}
+                hor, ver = food_state
+                row = 11 + (direction_y[ver] + direction_x[hor])
+
+        elif border == "bottom":
+            simple_map = {"UP": 0, "LEFT": 1, "RIGHT": 2}
+            if isinstance(food_state, str):
+                row = 13 + simple_map[food_state]
+            else:
+                direction_y = {"UP": 0}
+                direction_x = {"LEFT": 0, "RIGHT": 1}
+                hor, ver = food_state
+                row = 16 + (direction_y[ver] + direction_x[hor])
+        
+        elif border == "left":
+            simple_map = {"UP": 0, "DOWN": 1, "RIGHT": 2}
+            if isinstance(food_state, str):
+                row = 18 + simple_map[food_state]
+            else:
+                direction_y = {"UP": 0, "DOWN": 1}
+                direction_x = {"RIGHT": 0}
+                hor, ver = food_state
+                row = 21 + (direction_y[ver] + direction_x[hor])
+
+        elif border == "right":
+            simple_map = {"UP": 0, "DOWN": 1, "LEFT": 2}
+            if isinstance(food_state, str):
+                row = 23 + simple_map[food_state]
+            else:
+                direction_y = {"UP": 0, "DOWN": 1}
+                direction_x = {"LEFT": 0}
+                hor, ver = food_state
+                row = 26 + (direction_y[ver] + direction_x[hor])
+
+        return row
+    
+    
 
     def update_q_table(self, state, action, reward, next_state):
         # Your code here

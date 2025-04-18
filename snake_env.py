@@ -107,7 +107,7 @@ class SnakeGameEnv:
 
         return (direction, rel_distance)"""
        
-        head_x, head_y = self.snake_body[0]
+        """head_x, head_y = self.snake_body[0]
         food_x, food_y = self.food_pos
 
         if food_x == head_x:
@@ -119,7 +119,37 @@ class SnakeGameEnv:
         else:
             hor = "LEFT" if food_x < head_x else "RIGHT"
             ver = "UP" if food_y < head_y else "DOWN"
-            return (hor, ver)
+            return (hor, ver)"""
+        
+        head_x, head_y = self.snake_body[0]
+        # Determine border state (cell size assumed as 10)
+        if head_y == 0:
+            border = "top"
+        elif head_y >= self.frame_size_y - 10:
+            border = "bottom"
+        elif head_x == 0:
+            border = "left"
+        elif head_x >= self.frame_size_x - 10:
+            border = "right"
+        else:
+            border = "none"
+
+        food_x, food_y = self.food_pos
+
+        # Determine food relation:
+        if food_x == head_x:
+            # aligned vertically → simple vertical state
+            food_state = "UP" if food_y < head_y else "DOWN"
+        elif food_y == head_y:
+            # aligned horizontally → simple horizontal state
+            food_state = "LEFT" if food_x < head_x else "RIGHT"
+        else:
+            # combined state
+            hor = "LEFT" if food_x < head_x else "RIGHT"
+            ver = "UP" if food_y < head_y else "DOWN"
+            food_state = (hor, ver)
+
+        return (border, food_state)
 
 
     def get_body(self):
@@ -151,12 +181,17 @@ class SnakeGameEnv:
         if self.snake_pos == self.food_pos:
             return 100      
         elif self.check_game_over():
-            return -10
+            return -50
         
-        if previous_distance - current_distance > 0:
-            return 15
-        else: 
-            return -5
+        # Base reward based on whether the snake is moving closer or farther from the food.
+        reward = 20 if (previous_distance - current_distance > 0) else -15
+        
+        # Check if the snake's head is at any border and add a penalty of -5
+        head_x, head_y = self.snake_body[0]
+        if head_x == 0 or head_x == self.frame_size_x - 10 or head_y == 0 or head_y == self.frame_size_y - 10:
+            reward -= 5
+        
+        return reward
     
 
     def check_game_over(self):
