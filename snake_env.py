@@ -17,7 +17,7 @@ class SnakeGameEnv:
 
     def reset(self):
         # Resets the environment with default values
-        self.snake_pos = [50, 50]
+        """self.snake_pos = [50, 50]
         self.snake_body = [[50, 50], [60, 50], [70, 50]]
         self.food_pos = [random.randrange(1, (self.frame_size_x // 10)) * 10, random.randrange(1, (self.frame_size_y // 10)) * 10]
         # Ensure the food is not inside the snake's body
@@ -28,7 +28,45 @@ class SnakeGameEnv:
         self.score = 0
         self.game_over = False
         self.reward = 0 # Initialize the starting reward
-        return self.get_state()
+        return self.get_state2()"""
+        # Resets the environment with default values
+        self.snake_pos = [50, 50]
+        self.snake_body = [[50, 50], [60, 50], [70, 50]]
+        
+        # Generate food position with border appearance chance
+        while True:
+            if random.random() < 0.25:
+                # 10% chance: choose a border randomly
+                border = random.choice(["top", "bottom", "left", "right"])
+                if border == "top":
+                    x = random.randrange(0, self.frame_size_x, 10)
+                    y = 0
+                elif border == "bottom":
+                    x = random.randrange(0, self.frame_size_x, 10)
+                    y = self.frame_size_y - 10
+                elif border == "left":
+                    x = 0
+                    y = random.randrange(0, self.frame_size_y, 10)
+                elif border == "right":
+                    x = self.frame_size_x - 10
+                    y = random.randrange(0, self.frame_size_y, 10)
+            else:
+                # Otherwise, appear anywhere on the grid
+                x = random.randrange(0, self.frame_size_x, 10)
+                y = random.randrange(0, self.frame_size_y, 10)
+            food_pos = [x, y]
+            # Ensure the food is not inside the snake's body
+            if food_pos not in self.snake_body:
+                break
+
+        self.food_pos = food_pos
+        self.food_spawn = True
+        self.direction = 'RIGHT'
+        self.score = 0
+        self.game_over = False
+        self.reward = 0 # Initialize the starting reward
+        return self.get_state2()
+    
 
     def step(self, action):
         # Implements the logic to change the snake's direction based on action
@@ -43,7 +81,7 @@ class SnakeGameEnv:
         self.update_snake_position(action)
         reward = self.calculate_reward(previous_distance)
         self.update_food_position()
-        state = self.get_state()
+        state = self.get_state2()
         self.game_over = self.check_game_over()
         return state, reward, self.game_over
 
@@ -94,6 +132,121 @@ class SnakeGameEnv:
             rel_distance = "Medium"
 
         return rel_distance
+    
+
+    def calculate_danger(self):
+        """
+        Calculates immediate danger around the snake's head.
+        For each direction ("top", "bottom", "left", "right"), if the cell immediately 
+        adjacent is off the board or part of the snake's body then that direction is dangerous.
+        Importantly, we do not check the direction opposite to the snake's movement.
+        
+        Returns a dictionary with keys "top", "bottom", "left", "right" and values:
+            1 if danger is present, 0 if not.
+        """
+        head_x, head_y = self.snake_body[0]
+        step = 10  # grid cell size
+        danger = {"top": 0, "bottom": 0, "left": 0, "right": 0}
+        
+        # Get the opposite direction and skip checking it.
+        opposites = {"UP": "DOWN", "DOWN": "UP", "LEFT": "RIGHT", "RIGHT": "LEFT"}
+        current_direction = self.direction
+        opposite_direction = opposites.get(current_direction, None)
+        
+        # Check "top"
+        if opposite_direction == "UP":
+            danger["top"] = 0
+        else:
+            up_cell = [head_x, head_y - step]
+            if head_y - step < 0 or up_cell in self.snake_body:
+                danger["top"] = 1
+
+        # Check "bottom"
+        if opposite_direction == "DOWN":
+            danger["bottom"] = 0
+        else:
+            down_cell = [head_x, head_y + step]
+            if head_y + step >= self.frame_size_y or down_cell in self.snake_body:
+                danger["bottom"] = 1
+
+        # Check "left"
+        if opposite_direction == "LEFT":
+            danger["left"] = 0
+        else:
+            left_cell = [head_x - step, head_y]
+            if head_x - step < 0 or left_cell in self.snake_body:
+                danger["left"] = 1
+
+        # Check "right"
+        if opposite_direction == "RIGHT":
+            danger["right"] = 0
+        else:
+            right_cell = [head_x + step, head_y]
+            if head_x + step >= self.frame_size_x or right_cell in self.snake_body:
+                danger["right"] = 1
+
+        return danger
+        
+
+
+
+    def get_state2(self):
+        """
+        Returns the state as a tuple:
+            (food_state, danger)
+        
+        food_state:
+            One of eight values, depending on the relative position of the food:
+            - "UP", "DOWN", "LEFT", "RIGHT" if snake and food are aligned,
+            - or a tuple ("LEFT", "UP"), ("RIGHT", "UP"), ("LEFT", "DOWN"), ("RIGHT", "DOWN") if diagonal.
+        
+        danger:
+            A tuple with one or two blocked directions.
+            The first blocked direction is always the one opposite to the snake’s current movement.
+            In addition, if another immediate danger (from calculate_danger) exists (besides the forced one),
+            that second direction is included.
+        """
+        # Determine food_state
+        head_x, head_y = self.snake_body[0]
+        food_x, food_y = self.food_pos
+
+        if food_x == head_x:
+            food_state = "UP" if food_y < head_y else "DOWN"
+        elif food_y == head_y:
+            food_state = "LEFT" if food_x < head_x else "RIGHT"
+        else:
+            hor = "LEFT" if food_x < head_x else "RIGHT"
+            ver = "UP" if food_y < head_y else "DOWN"
+            food_state = (hor, ver)
+
+        # Force the blocked (danger) direction: always include the opposite of the current movement.
+        opposites = {"UP": "bottom", "DOWN": "top", "LEFT": "right", "RIGHT": "left"}
+        forced_block = opposites.get(self.direction, "none")
+
+        # Get current danger signals (calculate_danger does not consider the opposite)
+        danger_dict = self.calculate_danger()
+
+        # Check for any additional danger – excluding the forced_block,
+        # so that if, for example, the snake has a danger on "top" plus the forced "RIGHT" (snake going left),
+        # we include both.
+        additional = "none"
+        danger_order = ["top", "bottom", "left", "right"]
+        for d in danger_order:
+            if d != forced_block and danger_dict[d] == 1:
+                additional = d
+                break
+
+        if additional:
+            danger = (forced_block, additional)
+        else:
+            danger = (forced_block,)
+
+        return (food_state, danger)
+
+        
+
+
+
 
     def get_state(self):
         """Obtaining the current state of the game. Our snake currently has 12 different states. These are the combination
@@ -181,15 +334,15 @@ class SnakeGameEnv:
         if self.snake_pos == self.food_pos:
             return 100      
         elif self.check_game_over():
-            return -50
+            return -75
         
         # Base reward based on whether the snake is moving closer or farther from the food.
-        reward = 20 if (previous_distance - current_distance > 0) else -15
+        reward = 15 if (previous_distance - current_distance > 0) else -15
         
         # Check if the snake's head is at any border and add a penalty of -5
         head_x, head_y = self.snake_body[0]
         if head_x == 0 or head_x == self.frame_size_x - 10 or head_y == 0 or head_y == self.frame_size_y - 10:
-            reward -= 5
+            reward -= 20
         
         return reward
     

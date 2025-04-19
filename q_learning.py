@@ -10,7 +10,7 @@ import json
 import time
 
 class QLearning:
-    def __init__(self, n_states, n_actions, alpha=0.2, gamma=0.05, epsilon=1, epsilon_min=0.01, epsilon_decay=0.99):
+    def __init__(self, n_states, n_actions, alpha=0.1, gamma=0.9, epsilon=1, epsilon_min=0.1, epsilon_decay=0.995):
         # Best values after hyperparameter tuning seem to be alpha = 0.2 and gamma = 0.9
         # To see if training is being done right, epsilon = 0
         self.n_states = n_states
@@ -112,6 +112,73 @@ class QLearning:
 
         return row
     
+
+
+    def encode_state2(self, state):
+        """
+        Encodes the state tuple (food_state, danger) into an integer index.
+        
+        food_state is one of eight positions:
+            For simple (aligned) positions:
+                "UP"    -> 0, "DOWN"  -> 1, "LEFT"  -> 2, "RIGHT" -> 3
+            And for diagonal (combined) positions:
+                ("LEFT", "UP")    -> 4, ("RIGHT", "UP")    -> 5,
+                ("LEFT", "DOWN")  -> 6, ("RIGHT", "DOWN")  -> 7
+
+        danger is now a tuple of two strings:
+            - The first element (forced) is always the blocked direction opposite to the snake's current movement.
+            - The second element is either another immediate danger (if detected) or "none".
+        We then map these danger combinations as follows:
+        
+            ("top", "none")   ->  0,    ("top", "bottom") ->  1,
+            ("top", "left")   ->  2,    ("top", "right")  ->  3,
+            
+            ("bottom", "none")->  4,    ("bottom", "top") ->  5,
+            ("bottom", "left")->  6,    ("bottom", "right")->  7,
+            
+            ("left", "none")  ->  8,    ("left", "top")   ->  9,
+            ("left", "bottom")-> 10,    ("left", "right") -> 11,
+            
+            ("right", "none") -> 12,    ("right", "top")  -> 13,
+            ("right", "bottom")-> 14,    ("right", "left") -> 15.
+            
+        Finally, the overall state index is computed as:
+            state_index = food_state_index * 16 + danger_code
+        Total state space: 8 * 16 = 128.
+        """
+        food_state, danger = state
+
+        # Encode food_state
+        simple_map = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3}
+        if isinstance(food_state, str):
+            food_index = simple_map[food_state]
+        else:
+            # Diagonal positions mapping:
+            if food_state == ("LEFT", "UP"):
+                food_index = 4
+            elif food_state == ("RIGHT", "UP"):
+                food_index = 5
+            elif food_state == ("LEFT", "DOWN"):
+                food_index = 6
+            elif food_state == ("RIGHT", "DOWN"):
+                food_index = 7
+
+        # Ensure danger is a 2-tuple.
+        # If only one element is present, set second element as "none".
+        if len(danger) == 1:
+            danger = (danger[0], "none")
+        
+        # Define a manual mapping for the danger tuple:
+        danger_map = {
+            ("top", "none"): 0, ("top", "bottom"): 1, ("top", "left"): 2, ("top", "right"): 3,
+            ("bottom", "none"): 4, ("bottom", "top"): 5, ("bottom", "left"): 6, ("bottom", "right"): 7,
+            ("left", "none"): 8, ("left", "top"): 9, ("left", "bottom"): 10, ("left", "right"): 11,
+            ("right", "none"): 12, ("right", "top"): 13, ("right", "bottom"): 14, ("right", "left"): 15,
+        }
+        danger_code = danger_map.get(danger, 0)
+        
+        state_index = food_index * 16 + danger_code
+        return state_index
     
 
     def update_q_table(self, state, action, reward, next_state):
@@ -121,8 +188,8 @@ class QLearning:
         # Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + 0)
         # else:
         # Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + self.discount * max a' Q(nextState, a'))
-        enc_state = self.encode_state(state)
-        enc_next_state = self.encode_state(next_state)
+        enc_state = self.encode_state2(state)
+        enc_next_state = self.encode_state2(next_state)
 
         # Our Q value
         current_q = self.q_table[enc_state][action]

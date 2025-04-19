@@ -28,7 +28,7 @@ def main():
     training = True # Defines if it should train or not
 
     # Defining our states and actions
-    number_states = 28
+    number_states = 128
     number_actions = 4
     num_episodes = 500 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
@@ -62,9 +62,9 @@ def main():
 
             # Obtaining the current state and encoding it
             print(f"--------EPISODE {episode+1}--------")
-            state = env.get_state()
+            state = env.get_state2()
             print("state",state)
-            enc_state = ql.encode_state(state)
+            enc_state = ql.encode_state2(state)
             print("enc_state",enc_state)
 
             # Obtaining the directions and action taken
@@ -106,24 +106,27 @@ def main():
         ql.save_q_table()
         # Saving out hyperparameters
         #ql.save_hyperparams(episode+1,total_reward)
-        print(f"Episode {episode+1}, Total reward: {total_reward}")
+        print(f"Episode {episode+1}, Total reward: {total_reward}, Snake length: {len(env.get_body())}")
+        # Save both total reward and snake length (tab separated)
+        with open("episode_rewards.txt", "a") as f:
+            f.write(f"{total_reward}\t{len(env.get_body())}\n")
 
 
 
 
     # Final testing phase (speed set to 20 regardless of training speed)
-    print("-----Training complete. Now testing final agent-----")
+    print("\n-----Training complete. Now testing final agent-----")
     ql.epsilon = 0   # Disable exploration; use a greedy policy
     test_difficulty = 20
-    test_episodes = 5
+    test_episodes = 10
 
     for test in range(test_episodes):
         state = env.reset()
         total_reward = 0
         game_over = False
-        print(f"--------TEST EPISODE {test+1}--------")
+        print(f"\n--------TEST EPISODE {test+1}--------")
         while not game_over:
-            enc_state = ql.encode_state(state)
+            enc_state = ql.encode_state2(state)
             # Greedy action selection (no exploration)
             action = np.argmax(ql.q_table[enc_state])
             state, reward, game_over = env.step(action)
