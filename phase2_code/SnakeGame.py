@@ -8,11 +8,12 @@ from snake_env import SnakeGameEnv
 from q_learning import QLearning
 import pygame
 import sys
+import numpy as np
 
 def main():
     # Window size
-    FRAME_SIZE_X = 300
-    FRAME_SIZE_Y = 300
+    FRAME_SIZE_X = 480
+    FRAME_SIZE_Y = 480
     
     # Colors (R, G, B)
     BLACK = pygame.Color(0, 0, 0)
@@ -21,15 +22,15 @@ def main():
     GREEN = pygame.Color(0, 255, 0)
     BLUE = pygame.Color(0, 0, 255)
     
-    difficulty = 1000  # Adjust as needed
+    difficulty = 1000 # Adjust as needed
     render_game = True # Show the game or not
     growing_body = True # Makes the body of the snake grow
     training = True # Defines if it should train or not
 
     # Defining our states and actions
-    number_states = 8
+    number_states = 28 
     number_actions = 4
-    num_episodes = 100 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
+    num_episodes = 500 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
@@ -51,7 +52,8 @@ def main():
         state = env.reset()
         total_reward = 0
         game_over = False
-        
+        score = 0
+
         while not game_over:
             # Your code here.
             # Choose the best action for the state and possible actions from the q_learning algorithm
@@ -61,18 +63,18 @@ def main():
 
             # Obtaining the current state and encoding it
             state = env.get_state()
-            print("state",state)
             enc_state = ql.encode_state(state)
-            print("enc_state",enc_state)
 
             # Obtaining the directions and action taken
-            directions = [0,1,2,3]
+            directions = [0,1,2,3] # They will be later mapped to the directions
             action = ql.choose_action(enc_state, directions)
-            print("action",action)
             nextState, reward, game_over = env.step(action)
-            print("nextState",nextState)
-            print(f"reward {reward}\n\n")
-
+            
+            # Saving the score to compare results later
+            if reward == 100: # Apple is eaten
+                score += 100
+            else:
+                score -= 1
 
             if training:
                 #update the q table using those variables.
@@ -102,9 +104,18 @@ def main():
         
         # Saving our table
         ql.save_q_table()
+        
         # Saving out hyperparameters
-        #ql.save_hyperparams(episode+1,total_reward)
-        print(f"Episode {episode+1}, Total reward: {total_reward}")
+        # ql.save_hyperparams(episode+1,total_reward)
+        
+        print(f"Episode {episode+1}, Total reward: {total_reward}, Snake length: {len(env.get_body())}")
+        
+        # Save both total reward and snake length (tab separated)
+        #with open("testing_rewards.txt", "a") as f:
+        #   f.write(f"{score}\t{total_reward}\t{len(env.get_body())}\n")
+
 
 if __name__ == "__main__":
     main()
+
+    

@@ -17,19 +17,6 @@ class SnakeGameEnv:
 
     def reset(self):
         # Resets the environment with default values
-        """self.snake_pos = [50, 50]
-        self.snake_body = [[50, 50], [60, 50], [70, 50]]
-        self.food_pos = [random.randrange(1, (self.frame_size_x // 10)) * 10, random.randrange(1, (self.frame_size_y // 10)) * 10]
-        # Ensure the food is not inside the snake's body
-        while self.food_pos in self.snake_body:
-            self.food_pos = [random.randrange(1, (self.frame_size_x // 10)) * 10, random.randrange(1, (self.frame_size_y // 10)) * 10]
-        self.food_spawn = True
-        self.direction = 'RIGHT'
-        self.score = 0
-        self.game_over = False
-        self.reward = 0 # Initialize the starting reward
-        return self.get_state2()"""
-        # Resets the environment with default values
         self.snake_pos = [50, 50]
         self.snake_body = [[50, 50], [60, 50], [70, 50]]
         
@@ -54,8 +41,11 @@ class SnakeGameEnv:
                 # Otherwise, appear anywhere on the grid
                 x = random.randrange(0, self.frame_size_x, 10)
                 y = random.randrange(0, self.frame_size_y, 10)
+                
             food_pos = [x, y]
+            print("Food Position",food_pos)
             # Ensure the food is not inside the snake's body
+            print("Snake_body", self.snake_body)
             if food_pos not in self.snake_body:
                 break
 
@@ -189,7 +179,6 @@ class SnakeGameEnv:
         
 
 
-
     def get_state2(self):
         """
         Returns the state as a tuple:
@@ -243,68 +232,6 @@ class SnakeGameEnv:
 
         return (food_state, danger)
 
-        
-
-
-
-
-    def get_state(self):
-        """Obtaining the current state of the game. Our snake currently has 12 different states. These are the combination
-        of the direction to the food along with the closest direction"""
-        
-        """# Obtaining the direction
-        direction = self.direction_to_food()
-
-        # Obtaining the distance {Close, Medium, Far}
-        rel_distance = self.distance_to_food()
-
-        return (direction, rel_distance)"""
-       
-        """head_x, head_y = self.snake_body[0]
-        food_x, food_y = self.food_pos
-
-        if food_x == head_x:
-            # Aligned vertically
-            return "UP" if food_y < head_y else "DOWN"
-        elif food_y == head_y:
-            # Aligned horizontally
-            return "LEFT" if food_x < head_x else "RIGHT"
-        else:
-            hor = "LEFT" if food_x < head_x else "RIGHT"
-            ver = "UP" if food_y < head_y else "DOWN"
-            return (hor, ver)"""
-        
-        head_x, head_y = self.snake_body[0]
-        # Determine border state (cell size assumed as 10)
-        if head_y == 0:
-            border = "top"
-        elif head_y >= self.frame_size_y - 10:
-            border = "bottom"
-        elif head_x == 0:
-            border = "left"
-        elif head_x >= self.frame_size_x - 10:
-            border = "right"
-        else:
-            border = "none"
-
-        food_x, food_y = self.food_pos
-
-        # Determine food relation:
-        if food_x == head_x:
-            # aligned vertically → simple vertical state
-            food_state = "UP" if food_y < head_y else "DOWN"
-        elif food_y == head_y:
-            # aligned horizontally → simple horizontal state
-            food_state = "LEFT" if food_x < head_x else "RIGHT"
-        else:
-            # combined state
-            hor = "LEFT" if food_x < head_x else "RIGHT"
-            ver = "UP" if food_y < head_y else "DOWN"
-            food_state = (hor, ver)
-
-        return (border, food_state)
-
-
     def get_body(self):
     	return self.snake_body
     
@@ -339,7 +266,7 @@ class SnakeGameEnv:
         # Base reward based on whether the snake is moving closer or farther from the food.
         reward = 15 if (previous_distance - current_distance > 0) else -15
         
-        # Check if the snake's head is at any border and add a penalty of -5
+        # Check if the snake's head is at any border and add a penalty of -20
         head_x, head_y = self.snake_body[0]
         if head_x == 0 or head_x == self.frame_size_x - 10 or head_y == 0 or head_y == self.frame_size_y - 10:
             reward -= 20
@@ -409,6 +336,8 @@ class SnakeGameEnv:
     def update_food_position(self):
         if not self.food_spawn:
             self.food_pos = [random.randrange(1, (self.frame_size_x//10)) * 10, random.randrange(1, (self.frame_size_x//10)) * 10]
+            while self.food_pos in self.snake_body: # Ensures that the food does not spawn inside the body
+                self.food_pos = [random.randrange(1, (self.frame_size_x//10)) * 10, random.randrange(1, (self.frame_size_x//10)) * 10]
         self.food_spawn = True
         
         

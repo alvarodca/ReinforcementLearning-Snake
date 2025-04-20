@@ -12,8 +12,8 @@ import numpy as np
 
 def main():
     # Window size
-    FRAME_SIZE_X = 300
-    FRAME_SIZE_Y = 300
+    FRAME_SIZE_X = 480
+    FRAME_SIZE_Y = 480
     
     # Colors (R, G, B)
     BLACK = pygame.Color(0, 0, 0)
@@ -22,15 +22,15 @@ def main():
     GREEN = pygame.Color(0, 255, 0)
     BLUE = pygame.Color(0, 0, 255)
     
-    difficulty = 500  # Adjust as needed
+    difficulty = 1000 # Adjust as needed
     render_game = True # Show the game or not
     growing_body = True # Makes the body of the snake grow
-    training = True # Defines if it should train or not
+    training = False # Defines if it should train or not
 
     # Defining our states and actions
     number_states = 128
     number_actions = 4
-    num_episodes = 500 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
+    num_episodes = 10 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
@@ -52,7 +52,7 @@ def main():
         state = env.reset()
         total_reward = 0
         game_over = False
-        
+        score = 0
         while not game_over:
             # Your code here.
             # Choose the best action for the state and possible actions from the q_learning algorithm
@@ -74,7 +74,11 @@ def main():
             nextState, reward, game_over = env.step(action)
             print("nextState",nextState)
             print(f"reward {reward}\n\n")
-
+            # Saving the score to update it later
+            if reward == 100: # Apple is eaten
+                score += 100
+            else:
+                score -= 1
 
             if training:
                 #update the q table using those variables.
@@ -105,50 +109,13 @@ def main():
         # Saving our table
         ql.save_q_table()
         # Saving out hyperparameters
-        #ql.save_hyperparams(episode+1,total_reward)
+        # ql.save_hyperparams(episode+1,total_reward)
         print(f"Episode {episode+1}, Total reward: {total_reward}, Snake length: {len(env.get_body())}")
         # Save both total reward and snake length (tab separated)
         with open("episode_rewards.txt", "a") as f:
-            f.write(f"{total_reward}\t{len(env.get_body())}\n")
+           f.write(f"{score}\t{total_reward}\t{len(env.get_body())}\n")
 
 
-
-
-    # Final testing phase (speed set to 20 regardless of training speed)
-    print("\n-----Training complete. Now testing final agent-----")
-    ql.epsilon = 0   # Disable exploration; use a greedy policy
-    test_difficulty = 20
-    test_episodes = 10
-
-    for test in range(test_episodes):
-        state = env.reset()
-        total_reward = 0
-        game_over = False
-        print(f"\n--------TEST EPISODE {test+1}--------")
-        while not game_over:
-            enc_state = ql.encode_state2(state)
-            # Greedy action selection (no exploration)
-            action = np.argmax(ql.q_table[enc_state])
-            state, reward, game_over = env.step(action)
-            total_reward += reward
-            
-            # Render test episode using the test speed (20)
-            if render_game:
-                game_window.fill(BLACK)
-                snake_body = env.get_body()
-                food_pos = env.get_food()
-                for pos in snake_body:
-                    pygame.draw.rect(game_window, GREEN, pygame.Rect(pos[0], pos[1], 10, 10))
-                pygame.draw.rect(game_window, RED, pygame.Rect(food_pos[0], food_pos[1], 10, 10))
-                
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        sys.exit()
-                
-                pygame.display.flip()
-                fps_controller.tick(test_difficulty)
-        print(f"\nTest Episode {test+1}, Total reward: {total_reward}")
 
 
 

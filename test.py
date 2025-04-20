@@ -6,14 +6,14 @@ from q_learning import QLearning
 
 def main():
     # Parameters
-    FRAME_SIZE_X = 300
-    FRAME_SIZE_Y = 300
-    test_episodes = 10          # Number of test episodes to run
+    FRAME_SIZE_X = 480 # Same size as Assignment 1
+    FRAME_SIZE_Y = 480
+    test_episodes = 5         # Number of test episodes to run
     render_game = True          # Set to False to disable rendering during tests
     
     # Initialize environment and Q-learning agent
     env = SnakeGameEnv(FRAME_SIZE_X, FRAME_SIZE_Y, growing_body=True)
-    number_states = 40          # As defined by your encode_state2 mapping (8 * 5)
+    number_states = 128          
     number_actions = 4
     ql = QLearning(n_states=number_states, n_actions=number_actions)
     
@@ -26,6 +26,8 @@ def main():
     
     # Disable exploration for testing
     ql.epsilon = 0
+    
+    
     
     # Setup game window (if rendering is enabled)
     if render_game:
@@ -46,7 +48,8 @@ def main():
         state = env.reset()
         total_reward = 0
         game_over = False
-        
+        # Obtaining the score
+        score = 0
         last_action = None  # Record last action taken before dying.
         last_state  = None  # Record last state before dying.
         
@@ -56,6 +59,12 @@ def main():
             last_state = state  # Store current state before taking the action
             last_action = action  # Store the selected action
             state, reward, game_over = env.step(action)
+            # Apple is eaten
+            if reward == 100:
+                score += 100
+            else:
+                score -= 1
+
             total_reward += reward
             
             if render_game:
@@ -77,6 +86,12 @@ def main():
         
         # Print the final state and last action (as readable strings) before dying
         print(f"Test Episode {ep+1} Total Reward: {total_reward}")
+
+        # Saving the results
+        #with open("testing_rewards.txt", "a") as f:
+        #   f.write(f"{score}\t{total_reward}\t{len(env.get_body())}\n")
+
+            
         # Decode the last state: food_state could be a string or a tuple.
         food_state = last_state[0]
         if isinstance(food_state, tuple):
