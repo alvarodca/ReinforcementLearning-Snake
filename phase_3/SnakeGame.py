@@ -10,10 +10,10 @@ import pygame
 import sys
 import numpy as np
 
-def main():
+def main(training=True, difficulty=1000):
     # Window size
-    FRAME_SIZE_X = 480
-    FRAME_SIZE_Y = 480
+    FRAME_SIZE_X = 150
+    FRAME_SIZE_Y = 150
     
     # Colors (R, G, B)
     BLACK = pygame.Color(0, 0, 0)
@@ -22,21 +22,23 @@ def main():
     GREEN = pygame.Color(0, 255, 0)
     BLUE = pygame.Color(0, 0, 255)
     
-    difficulty = 1000 # Adjust as needed
     render_game = True # Show the game or not
     growing_body = True # Makes the body of the snake grow
-    training = False # Defines if it should train or not
 
     # Defining our states and actions
-    number_states = 128
+    number_states = 320
     number_actions = 4
-    num_episodes = 10 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
+    num_episodes = 500 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
     pygame.init()
     env = SnakeGameEnv(FRAME_SIZE_X, FRAME_SIZE_Y, growing_body)
-    ql = QLearning(n_states=number_states, n_actions=number_actions)  
+
+    if training: 
+        ql = QLearning(n_states=number_states, n_actions=number_actions)
+    else: 
+        ql = QLearning(n_states=number_states, n_actions=number_actions, epsilon=0)
     
 
 
@@ -45,7 +47,7 @@ def main():
         fps_controller = pygame.time.Clock()
     
     # Loading the table
-    ql.load_q_table(filename="qtable.txt")
+    ql.load_q_table(filename="qtable_phase3.txt")
         
     
     for episode in range(num_episodes):
@@ -62,9 +64,9 @@ def main():
 
             # Obtaining the current state and encoding it
             print(f"--------EPISODE {episode+1}--------")
-            state = env.get_state2()
+            state = env.get_state3()
             print("state",state)
-            enc_state = ql.encode_state2(state)
+            enc_state = ql.encode_state3(state)
             print("enc_state",enc_state)
 
             # Obtaining the directions and action taken
@@ -107,7 +109,7 @@ def main():
                 fps_controller.tick(difficulty)
         
         # Saving our table
-        ql.save_q_table()
+        ql.save_q_table(filename="qtable_phase3.txt")
         # Saving out hyperparameters
         # ql.save_hyperparams(episode+1,total_reward)
         print(f"Episode {episode+1}, Total reward: {total_reward}, Snake length: {len(env.get_body())}")
@@ -120,6 +122,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(training=False, difficulty=15)
 
     

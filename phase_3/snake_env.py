@@ -71,7 +71,7 @@ class SnakeGameEnv:
         self.update_snake_position(action)
         reward = self.calculate_reward(previous_distance)
         self.update_food_position()
-        state = self.get_state2()
+        state = self.get_state3()
         self.game_over = self.check_game_over()
         return state, reward, self.game_over
 
@@ -96,32 +96,6 @@ class SnakeGameEnv:
                 direction = "LEFT"
 
         return direction
-    
-    def distance_to_food(self):
-        """Obtains the relative distance from the head of the snake to the food, discretizing it in terms of closeness"""
-        
-        # Calculating the  distance to the food
-        distance_to_food_x = self.food_pos[0] - self.snake_body[0][0]
-        distance_to_food_y = self.food_pos[1] - self.snake_body[0][1]
-        
-        # Calculating the distance
-        distance = abs(distance_to_food_x) + abs(distance_to_food_y)
-
-        # Total size of the board
-        board_size = self.frame_size_x + self.frame_size_y
-
-        # Normalizing the distance
-        normalized_distance = distance/board_size
-
-        # Returning nominal values in terms of the distance
-        if normalized_distance <= 0.33:
-            rel_distance = "Close"
-        elif normalized_distance >= 0.66:
-            rel_distance = "Far"
-        else:
-            rel_distance = "Medium"
-
-        return rel_distance
     
 
     def calculate_danger(self):
@@ -231,6 +205,62 @@ class SnakeGameEnv:
             danger = (forced_block,)
 
         return (food_state, danger)
+    
+
+    def get_state3(self):
+        """
+        Returns the state as a tuple:
+            (food_state, danger)
+
+        food_state:
+            One of eight values, depending on the relative position of the food:
+            - "UP", "DOWN", "LEFT", "RIGHT" if aligned
+            - or a tuple, e.g. ("LEFT", "UP"), ("RIGHT", "DOWN"), etc., if diagonal.
+
+        danger:
+            A tuple with three elements:
+            - The first element is the forced blocked direction – always the opposite of the current movement.
+            - The next two elements are additional immediate danger signals (if any) from calculate_danger,
+                in a preset priority order. If fewer than two additional danger directions are detected,
+                the remaining elements are set to "none".
+        """
+        # Determine food_state
+        head_x, head_y = self.snake_body[0]
+        food_x, food_y = self.food_pos
+
+        if food_x == head_x:
+            food_state = "UP" if food_y < head_y else "DOWN"
+        elif food_y == head_y:
+            food_state = "LEFT" if food_x < head_x else "RIGHT"
+        else:
+            hor = "LEFT" if food_x < head_x else "RIGHT"
+            ver = "UP" if food_y < head_y else "DOWN"
+            food_state = (hor, ver)
+
+        # Force the blocked (danger) direction: always include opposite of the current movement.
+        # (Note: Here we use a mapping that yields lowercase danger names.)
+        opposites = {"UP": "bottom", "DOWN": "top", "LEFT": "right", "RIGHT": "left"}
+        forced_block = opposites.get(self.direction, "none")
+
+        # Get current danger signals.
+        danger_dict = self.calculate_danger()
+
+        # Look for up to two additional danger directions (excluding the forced_block).
+        additional = []
+        danger_order = ["top", "bottom", "left", "right"]
+        for d in danger_order:
+            if d != forced_block and danger_dict[d] == 1:
+                additional.append(d)
+            if len(additional) == 2:
+                break
+
+        # Ensure the danger tuple has three elements.
+        while len(additional) < 2:
+            additional.append("none")
+
+        danger = (forced_block, additional[0], additional[1])
+        return (food_state, danger)
+
 
     def get_body(self):
     	return self.snake_body
@@ -238,17 +268,6 @@ class SnakeGameEnv:
     def get_food(self):
     	return self.food_pos
     
-    def distance_to_border(self):
-        """Calculates the distance from the snake's head to the closest border (in pixels)."""
-        # Distance from left border
-        d_left = self.snake_pos[0]
-        # Distance from right border (considering a cell size of 10)
-        d_right = self.frame_size_x - self.snake_pos[0] - 10
-        # Distance from top border
-        d_top = self.snake_pos[1]
-        # Distance from bottom border
-        d_bottom = self.frame_size_y - self.snake_pos[1] - 10
-        return min(d_left, d_right, d_top, d_bottom)
 
     def calculate_reward(self, previous_distance):
         """Calculates the reward of the snake"""
@@ -267,9 +286,9 @@ class SnakeGameEnv:
         reward = 15 if (previous_distance - current_distance > 0) else -15
         
         # Check if the snake's head is at any border and add a penalty of -20
-        head_x, head_y = self.snake_body[0]
+        """head_x, head_y = self.snake_body[0]
         if head_x == 0 or head_x == self.frame_size_x - 10 or head_y == 0 or head_y == self.frame_size_y - 10:
-            reward -= 20
+            reward -= 20"""
         
         return reward
     
@@ -335,7 +354,29 @@ class SnakeGameEnv:
     
     def update_food_position(self):
         if not self.food_spawn:
-            self.food_pos = [random.randrange(1, (self.frame_size_x//10)) * 10, random.randrange(1, (self.frame_size_x//10)) * 10]
+
+            # With a 25% chance the food will appear in on e of the borders
+            if random.random() < 0.00:
+                border = random.choice(["top", "bottom", "left", "right"])
+                if border == "top":
+                    x = random.randrange(0, self.frame_size_x, 10)
+                    y = 0
+                elif border == "bottom":
+                    x = random.randrange(0, self.frame_size_x, 10)
+                    y = self.frame_size_y - 10
+                elif border == "left":
+                    x = 0
+                    y = random.randrange(0, self.frame_size_y, 10)
+                elif border == "right":
+                    x = self.frame_size_x - 10
+                    y = random.randrange(0, self.frame_size_y, 10)
+            else:
+                # Otherwise, appear anywhere on the grid
+                x = random.randrange(0, self.frame_size_x, 10)
+                y = random.randrange(0, self.frame_size_y, 10)
+                
+            self.food_pos = [x, y]
+
             while self.food_pos in self.snake_body: # Ensures that the food does not spawn inside the body
                 self.food_pos = [random.randrange(1, (self.frame_size_x//10)) * 10, random.randrange(1, (self.frame_size_x//10)) * 10]
         self.food_spawn = True
