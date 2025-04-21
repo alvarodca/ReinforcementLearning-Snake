@@ -43,9 +43,6 @@ class SnakeGameEnv:
                 y = random.randrange(0, self.frame_size_y, 10)
                 
             food_pos = [x, y]
-            print("Food Position",food_pos)
-            # Ensure the food is not inside the snake's body
-            print("Snake_body", self.snake_body)
             if food_pos not in self.snake_body:
                 break
 

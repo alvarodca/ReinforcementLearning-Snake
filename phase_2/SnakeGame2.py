@@ -4,16 +4,16 @@ Made with PyGame
 Last modification in April 2024 by José Luis Perán
 Machine Learning Classes - University Carlos III of Madrid
 """
-from snake_env import SnakeGameEnv
-from q_learning import QLearning
+from snake_env2 import SnakeGameEnv
+from q_learning2 import QLearning
 import pygame
 import sys
 import numpy as np
 
 def main():
     # Window size
-    FRAME_SIZE_X = 480
-    FRAME_SIZE_Y = 480
+    FRAME_SIZE_X = 150
+    FRAME_SIZE_Y = 150
     
     # Colors (R, G, B)
     BLACK = pygame.Color(0, 0, 0)
@@ -22,15 +22,15 @@ def main():
     GREEN = pygame.Color(0, 255, 0)
     BLUE = pygame.Color(0, 0, 255)
     
-    difficulty = 1000 # Adjust as needed
+    difficulty = 10 # Adjust as needed
     render_game = True # Show the game or not
     growing_body = True # Makes the body of the snake grow
-    training = True # Defines if it should train or not
+    training = False # Defines if it should train or not
 
     # Defining our states and actions
     number_states = 28 
     number_actions = 4
-    num_episodes = 500 # Episode we want for training, everytime an apple is  eaten or snake dies an episode is finished
+    num_episodes = 500 # Episode we want for training, everytime a snake dies an episode is finished
 
     # Initialize the game window, environment and q_learning algorithm
     # Your code here.
@@ -45,7 +45,7 @@ def main():
         fps_controller = pygame.time.Clock()
     
     # Loading the table
-    ql.load_q_table(filename="qtable.txt")
+    ql.load_q_table(filename="qtable_phase2.txt")
         
     
     for episode in range(num_episodes):
@@ -58,8 +58,6 @@ def main():
             # Your code here.
             # Choose the best action for the state and possible actions from the q_learning algorithm
             # Call the environment step with that action and get next_state, reward and game_over variables
-
-
 
             # Obtaining the current state and encoding it
             state = env.get_state()
@@ -105,7 +103,7 @@ def main():
         # Saving our table
         ql.save_q_table()
         
-        # Saving out hyperparameters
+        # Saving our hyperparameters
         # ql.save_hyperparams(episode+1,total_reward)
         
         print(f"Episode {episode+1}, Total reward: {total_reward}, Snake length: {len(env.get_body())}")

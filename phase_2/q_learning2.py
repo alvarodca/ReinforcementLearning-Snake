@@ -10,8 +10,8 @@ import json
 import time
 
 class QLearning:
-    def __init__(self, n_states, n_actions, alpha=0.3, gamma=0.7, epsilon=1, epsilon_min=0.1, epsilon_decay=0.995):
-        # Best values after hyperparameter tuning seem to be alpha = 0.1 and gamma = 0.9
+    def __init__(self, n_states, n_actions, alpha=0.2, gamma=0.8, epsilon=0, epsilon_min=0.1, epsilon_decay=0.995):
+        # Best values after hyperparameter tuning seem to be alpha = 0.2 and gamma = 0.8
         # To see if training is being done right, epsilon = 0
         self.n_states = n_states
         self.n_actions = n_actions
@@ -123,11 +123,11 @@ class QLearning:
         self.q_table[enc_state][action] = new_q
 
 
-    def save_q_table(self, filename="qtable.txt"):
+    def save_q_table(self, filename="qtable_phase2.txt"):
         np.savetxt(filename, self.q_table)
 
 
-    def load_q_table(self, filename="qtable.txt"):
+    def load_q_table(self, filename="qtable_phase2.txt"):
         try:
             self.q_table = np.loadtxt(filename)
         except IOError:
